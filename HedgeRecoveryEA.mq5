@@ -8,6 +8,10 @@
 
 #include "Include/HR_Config.mqh"
 #include "Include/HR_Validation.mqh"
+#include "Include/HR_Trade.mqh"
+
+//--- Hapus tanda // di bawah untuk uji Tahap 2 (buka 1 pasangan sekali). Dihapus di Tahap 3.
+//#define HR_STAGE2_SMOKE_TEST
 
 //+------------------------------------------------------------------+
 int OnInit()
@@ -20,6 +24,7 @@ int OnInit()
      }
 
    HR_WarnSymbolName();
+   HR_TradeInit();
 
    string tradeErr = "";
    if(!HR_IsTradingAllowed(tradeErr))
@@ -41,4 +46,17 @@ void OnDeinit(const int reason)
 void OnTick()
   {
    HR_CheckMarginWarning();
+   HR_RetryMissingLeg();
+   HR_EnsureAllTP();
+
+#ifdef HR_STAGE2_SMOKE_TEST
+   static bool done = false;
+   if(!done)
+     {
+      done = true;
+      ulong b = 0, s = 0;
+      bool ok = HR_OpenPair(b, s);
+      HR_Log(StringFormat("SMOKE TEST pair ok=%s BUY=#%I64u SELL=#%I64u", (ok ? "true" : "false"), b, s));
+     }
+#endif
   }
