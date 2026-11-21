@@ -7,6 +7,7 @@
 #include "HR_Config.mqh"
 #include "HR_Validation.mqh"
 #include "HR_Trade.mqh"
+#include "HR_Positions.mqh"
 
 //--- true  : beberapa TP sebelum pasangan sempat dibuka -> digabung jadi 1 pasangan
 //--- false : satu pasangan per event TP (literal)
@@ -26,16 +27,9 @@ int           g_seenIdx         = 0;
 //--- Jumlah posisi milik EA (simbol + magic)
 int HR_CountEAPositions()
   {
-   int n = 0;
-   for(int i = PositionsTotal() - 1; i >= 0; i--)
-     {
-      ulong t = PositionGetTicket(i);
-      if(t == 0) continue;
-      if(PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
-      if(PositionGetInteger(POSITION_MAGIC) != MagicNumber) continue;
-      n++;
-     }
-   return n;
+   HR_Snapshot s;
+   HR_ScanPositions(s);
+   return s.buy.count + s.sell.count;
   }
 
 //--- Deal ini sudah pernah diproses?
