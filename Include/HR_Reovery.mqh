@@ -198,7 +198,7 @@ void HR_FinishCloseAll()
    HR_ResetRecovery();
    g_recoveryCount++;
    g_eaState = EA_STATE_WAITING;
-   g_waitEnd = (datetime)(TimeCurrent() + (long)RecoveryWaitMinutes * 60);
+   g_waitEnd = (datetime)(TimeTradeServer() + (long)RecoveryWaitMinutes * 60);
    // g_openingLocked tetap true selama WAITING
    HR_Alert(StringFormat("CLOSE ALL selesai. WAITING %d menit sampai %s",
                          RecoveryWaitMinutes, TimeToString(g_waitEnd, TIME_DATE | TIME_SECONDS)));
@@ -273,7 +273,7 @@ void CheckWaitingPeriod()
   {
    if(g_eaState != EA_STATE_WAITING)
       return;
-   if(TimeCurrent() < g_waitEnd)
+      if(TimeTradeServer() < g_waitEnd)
       return;
 
    g_eaState        = EA_STATE_RUNNING;

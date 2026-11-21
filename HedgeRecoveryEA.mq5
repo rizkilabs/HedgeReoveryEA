@@ -15,6 +15,7 @@
 #include "Include/HR_Positions.mqh"
 #include "Include/HR_Cycle.mqh"
 #include "Include/HR_Recovery.mqh"
+#include "Include/HR_State.mqh"
 
 //+------------------------------------------------------------------+
 int OnInit()
@@ -44,17 +45,23 @@ int OnInit()
 #ifdef HR_STAGE5_SELFTEST
    HR_SelfTestRecovery();
 #endif
+
+   HR_StateInit();
+   RestoreEAState();
+   EventSetTimer(1);
    return INIT_SUCCEEDED;
   }
 
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
   {
+   EventKillTimer();
+   SaveEAState();
    HR_Log("Dihentikan. Reason=" + IntegerToString(reason));
   }
 
 //+------------------------------------------------------------------+
-void OnTick()
+void HR_TickLogic()
   {
    HR_RefreshSnapshot();
    HR_CheckMarginWarning();
@@ -89,9 +96,31 @@ void OnTick()
   }
 
 //+------------------------------------------------------------------+
+void OnTick()
+  {
+   HR_TickLogic();
+   HR_SaveStateIfChanged();
+  }
+
+//+------------------------------------------------------------------+
+//| Timer 1 detik: retry Close All dan WAITING tetap jalan saat sepi |
+//+------------------------------------------------------------------+
+void OnTimer()
+  {
+   HR_RefreshSnapshot();
+   if(g_closingAll)
+      HR_ProcessCloseAll();
+   else
+      CheckWaitingPeriod();
+   HR_SaveStateIfChanged();
+  }
+
+//+------------------------------------------------------------------+
 void OnTradeTransaction(const MqlTradeTransaction &trans,
                         const MqlTradeRequest &request,
                         const MqlTradeResult &result)
   {
    HR_HandleTradeTransaction(trans);
+   HR_NoteTPDeal(trans);
+   HR_SaveStateIfChanged();
   }
